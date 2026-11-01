@@ -56,6 +56,7 @@ pub struct WeightNormConv1d {
 }
 
 impl WeightNormConv1d {
+    #[allow(clippy::too_many_arguments)]
     pub fn init(
         in_c: usize,
         out_c: usize,

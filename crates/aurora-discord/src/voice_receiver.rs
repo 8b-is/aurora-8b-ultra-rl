@@ -21,12 +21,12 @@ impl VoiceEventHandler for AuroraVoiceReceiver {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         match ctx {
             EventContext::SpeakingStateUpdate(Speaking {
-                ssrc, user_id, ..
+                ssrc,
+                user_id: Some(uid),
+                ..
             }) => {
-                if let Some(uid) = user_id {
-                    let serenity_uid = UserId::new(uid.0);
-                    self.engine.bind_ssrc_user(*ssrc, serenity_uid);
-                }
+                let serenity_uid = UserId::new(uid.0);
+                self.engine.bind_ssrc_user(*ssrc, serenity_uid);
             }
             EventContext::VoiceTick(tick) => {
                 // A. Demux actively speaking users (48 kHz Stereo i16 -> 16 kHz Mono f32)

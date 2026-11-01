@@ -15,7 +15,7 @@ const FIR_LPF_7TAP: [f32; 7] = [0.045, 0.110, 0.215, 0.260, 0.215, 0.110, 0.045]
 pub fn downsample_48k_stereo_to_16k_mono_f32(pcm_48k_stereo: &[i16]) -> Vec<f32> {
     let mono_48k_len = pcm_48k_stereo.len() / 2;
     let mut mono_48k = Vec::with_capacity(mono_48k_len);
-    for frame in pcm_48k_stereo.chunks_exact(2) {
+    for frame in pcm_48k_stereo.as_chunks::<2>().0 {
         let mid = ((frame[0] as f32) + (frame[1] as f32)) * (0.5 / 32768.0);
         mono_48k.push(mid);
     }

@@ -45,13 +45,13 @@ impl Quantal80msPacket {
         out[2..4].copy_from_slice(&seq_num.to_le_bytes());
         out[4] = self.vad_prob_q8;
         out[5] = self.rms_db_q8 as u8;
-        for i in 0..10 {
+        for (i, val) in rvq_q0.iter().enumerate() {
             let off = 6 + i * 2;
-            out[off..off + 2].copy_from_slice(&rvq_q0[i].to_le_bytes());
+            out[off..off + 2].copy_from_slice(&val.to_le_bytes());
         }
-        for i in 0..8 {
+        for (i, val) in rvq_q1.iter().enumerate() {
             let off = 26 + i * 2;
-            out[off..off + 2].copy_from_slice(&rvq_q1[i].to_le_bytes());
+            out[off..off + 2].copy_from_slice(&val.to_le_bytes());
         }
         out
     }
@@ -70,13 +70,13 @@ impl Quantal80msPacket {
         let rms_db_q8 = bytes[5] as i8;
         let mut rvq_q0 = [0u16; 10];
         let mut rvq_q1 = [0u16; 8];
-        for i in 0..10 {
+        for (i, slot) in rvq_q0.iter_mut().enumerate() {
             let off = 6 + i * 2;
-            rvq_q0[i] = u16::from_le_bytes([bytes[off], bytes[off + 1]]);
+            *slot = u16::from_le_bytes([bytes[off], bytes[off + 1]]);
         }
-        for i in 0..8 {
+        for (i, slot) in rvq_q1.iter_mut().enumerate() {
             let off = 26 + i * 2;
-            rvq_q1[i] = u16::from_le_bytes([bytes[off], bytes[off + 1]]);
+            *slot = u16::from_le_bytes([bytes[off], bytes[off + 1]]);
         }
         Some(Self {
             magic,
@@ -197,11 +197,11 @@ impl Esp32QuantalFrontend {
 
         let mut rvq_q0 = [0u16; 10];
         let mut rvq_q1 = [0u16; 8];
-        for i in 0..10 {
-            rvq_q0[i] = (q0_idx.get(i).copied().unwrap_or(0) as u16) % 2048;
+        for (i, slot) in rvq_q0.iter_mut().enumerate() {
+            *slot = (q0_idx.get(i).copied().unwrap_or(0) as u16) % 2048;
         }
-        for i in 0..8 {
-            rvq_q1[i] = (q1_idx.get(i).copied().unwrap_or(0) as u16) % 2048;
+        for (i, slot) in rvq_q1.iter_mut().enumerate() {
+            *slot = (q1_idx.get(i).copied().unwrap_or(0) as u16) % 2048;
         }
 
         // Compute RMS dBFS

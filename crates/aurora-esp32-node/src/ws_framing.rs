@@ -1,6 +1,8 @@
 //! Zero-allocation `#![no_std]` RFC-6455 Binary & Text WebSocket Framing for `embassy-net`
 //! and host verification. Supports both 2-byte (`< 126B`) and 4-byte (`126..=960B`) server headers.
 
+#![allow(clippy::result_unit_err)]
+
 pub const WS_UPGRADE_REQ: &[u8] = b"GET /v1/aurora-esp32 HTTP/1.1\r\n\
 Host: aurora.local\r\n\
 Upgrade: websocket\r\n\

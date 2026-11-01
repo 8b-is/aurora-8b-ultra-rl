@@ -68,6 +68,7 @@ pub fn compute_group_relative_advantages(rubrics: &[DuplexRolloutRubric]) -> Vec
 /// - `teacher_logits`: `[G, T, V]` (`MiMo-V2.6-Pro-RL` + `Audio8-ASR-Infinite` teacher ensemble)
 /// - `advantages`: `[G]`
 /// - `pred_wav_24k`, `target_wav_24k`: `[G, 1, Samples]`
+#[allow(clippy::too_many_arguments)]
 pub fn grpo_step_loss(
     student_logits: Tensor<3>,
     old_logits: Tensor<3>,

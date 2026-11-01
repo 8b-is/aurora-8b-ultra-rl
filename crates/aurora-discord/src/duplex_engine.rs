@@ -59,7 +59,7 @@ impl UserRollingSession {
     /// Converts Songbird's `20 ms` `48 kHz` Stereo `i16` slice (`1,920` samples = `960` stereo frames)
     /// into `320` mono `16 kHz` `f32` samples. Four `20 ms` ticks = `1,280` samples (`80 ms`).
     pub fn push_48k_stereo_i16(&mut self, pcm_48k_stereo: &[i16]) {
-        for chunk in pcm_48k_stereo.chunks_exact(6) {
+        for chunk in pcm_48k_stereo.as_chunks::<6>().0 {
             let m0 = (chunk[0] as f32 + chunk[1] as f32) * 0.5;
             let m1 = (chunk[2] as f32 + chunk[3] as f32) * 0.5;
             let m2 = (chunk[4] as f32 + chunk[5] as f32) * 0.5;
