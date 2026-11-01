@@ -1,0 +1,15 @@
+[package]
+name = "aurora-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Shared #[no_std] quantal p/q wire packets (42B Quantal80msPacket), 8-class Semantic VAD, NLMS AEC, and polyphase FIR resamplers"
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+libm.workspace = true
+serde = { workspace = true, optional = true }

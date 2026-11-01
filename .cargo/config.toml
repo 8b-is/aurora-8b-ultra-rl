@@ -1,0 +1,3 @@
+[env]
+OPUS_LIB_DIR = "/opt/homebrew/opt/opus"
+LIBOPUS_LIB_DIR = "/opt/homebrew/opt/opus"

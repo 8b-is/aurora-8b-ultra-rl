@@ -1,0 +1,10 @@
+[package]
+name = "aurora-kokoro-tts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Pure-Rust Burn Kokoro-82M StyleTTS2 + ISTFTNet 24 kHz generator (N_FFT=20, hop=5, win=20), 9-harmonic SourceModuleHnNSF, and Multi-Resolution STFT loss"
+
+[dependencies]
+burn.workspace = true

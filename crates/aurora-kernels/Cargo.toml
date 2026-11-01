@@ -1,0 +1,10 @@
+[package]
+name = "aurora-kernels"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Fused LFM2.5 double-gated short causal convolution, 8-codebook RVQ Depthformer step, and analytical Autodiff backward bridge"
+
+[dependencies]
+burn.workspace = true

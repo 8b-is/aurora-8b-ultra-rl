@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+.DS_Store
+.env
+*.bpk
+*.safetensors
+checkpoints/
+data/

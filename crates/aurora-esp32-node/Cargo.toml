@@ -1,0 +1,37 @@
+[package]
+name = "aurora-esp32-node"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "#![no_std] ESP32-S3 Edge Node combining esp-hal Circular I2S DMA, NLMS AEC, Burn-Flex 8MB PSRAM Quantal Micro-Encoder, and zero-alloc RFC-6455 WebSocket framing"
+
+[features]
+default = []
+esp32s3 = []
+
+[dependencies]
+burn = { version = "0.22.1", default-features = false, features = ["flex"] }
+burn-flex = { version = "0.22.1", default-features = false }
+burn-nn = { version = "0.22.1", default-features = false }
+libm.workspace = true
+bytemuck.workspace = true
+
+[target.'cfg(target_arch = "xtensa")'.dependencies]
+static_cell = "2.1"
+portable-atomic = { version = "1.10", features = ["critical-section"] }
+esp-hal = { version = "1.0.0-beta.0", features = ["esp32s3", "psram"] }
+esp-hal-embassy = { version = "0.7.0", features = ["esp32s3"] }
+esp-alloc = { version = "0.7.0" }
+esp-wifi = { version = "0.13.0", features = ["esp32s3", "wifi"] }
+esp-println = { version = "0.13.0", features = ["esp32s3", "log"] }
+esp-backtrace = { version = "0.15.0", features = [
+    "esp32s3",
+    "exception-handler",
+    "panic-handler",
+    "println",
+] }
+embassy-executor = { version = "0.7.0", features = ["task-arena-size-65536"] }
+embassy-time = { version = "0.4.0" }
+embassy-net = { version = "0.6.0", features = ["tcp", "dhcpv4", "medium-ethernet"] }
+embassy-sync = { version = "0.6.0" }

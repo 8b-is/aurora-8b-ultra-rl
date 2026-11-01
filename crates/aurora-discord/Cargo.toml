@@ -1,0 +1,23 @@
+[package]
+name = "aurora-discord"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Full-duplex Serenity + Songbird Discord RTP Voice Engine with 8-class Semantic VAD, <1ms barge-in flush, and Kokoro-82M ISTFTNet egress"
+
+[[bin]]
+name = "aurora-discord"
+path = "src/main.rs"
+
+[dependencies]
+aurora-core = { path = "../aurora-core" }
+aurora-kokoro-tts = { path = "../aurora-kokoro-tts" }
+burn.workspace = true
+serenity.workspace = true
+songbird.workspace = true
+symphonia.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

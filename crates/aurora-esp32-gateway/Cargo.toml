@@ -1,0 +1,26 @@
+[package]
+name = "aurora-esp32-gateway"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Axum /v1/aurora-esp32 WebSocket gateway decoding 42-byte Quantal80msPacket frames and streaming 960B (30ms) 16kHz i16le PCM chunks"
+
+[[bin]]
+name = "aurora-esp32-gateway"
+path = "src/main.rs"
+
+[dependencies]
+aurora-core = { path = "../aurora-core" }
+aurora-kokoro-tts = { path = "../aurora-kokoro-tts" }
+burn.workspace = true
+axum.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures-util.workspace = true
+dashmap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

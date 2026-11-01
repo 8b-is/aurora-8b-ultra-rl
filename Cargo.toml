@@ -1,0 +1,66 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/aurora-core",
+    "crates/aurora-weights",
+    "crates/aurora-kernels",
+    "crates/aurora-kokoro-tts",
+    "crates/aurora-train-rl",
+    "crates/aurora-discord",
+    "crates/aurora-esp32-gateway",
+    "crates/aurora-unified-daemon",
+    "crates/aurora-esp32-node",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+authors = ["Péter Lódri <cabotage@pm.me>", "8b-is Team"]
+
+[workspace.dependencies]
+burn = { version = "0.22.1", default-features = false, features = ["std", "flex"] }
+tokio = { version = "1.43", features = ["full"] }
+tokio-util = "0.7"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+axum = { version = "0.8.9", features = ["ws"] }
+serenity = { version = "0.12.5", default-features = false, features = [
+    "client",
+    "gateway",
+    "rustls_backend",
+    "model",
+    "voice",
+    "cache",
+    "http",
+    "builder",
+] }
+songbird = { version = "0.6.1", default-features = false, features = [
+    "driver",
+    "gateway",
+    "receive",
+    "rustls",
+    "serenity",
+    "tungstenite",
+    "builtin-queue",
+] }
+symphonia = { version = "0.5.2", default-features = false, features = [
+    "ogg",
+    "pcm",
+    "wav",
+    "isomp4",
+] }
+dashmap = "6"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = "1.0"
+bytemuck = { version = "1.25.2", features = ["derive"] }
+blake3 = "1.8.7"
+libm = "0.2.16"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true

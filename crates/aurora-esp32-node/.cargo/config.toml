@@ -1,0 +1,16 @@
+# Xtensa ESP32-S3 Bare-Metal Toolchain Configuration (`espup install`)
+# To flash onto ESP32-S3 hardware:
+#   cargo run --release --target xtensa-esp32s3-none-elf --features esp32s3
+[target.xtensa-esp32s3-none-elf]
+runner = "espflash flash --monitor"
+rustflags = [
+    "-C", "link-arg=-nostartfiles",
+    "-C", "target-cpu=esp32s3",
+]
+
+[env]
+ESP_LOG = "INFO"
+WIFI_SSID = "Aurora_Lab_5G"
+WIFI_PASS = "super_secret_password"
+AURORA_WS_HOST = "192.168.1.100"
+AURORA_WS_PORT = "8080"

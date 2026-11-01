@@ -1,0 +1,23 @@
+[package]
+name = "aurora-unified-daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Single-process GPU daemon sharing one Aurora-8B-Ultra-RL + Kokoro-82M runtime across Serenity/Songbird Discord Voice and Axum /v1/aurora-esp32 WebSockets"
+
+[[bin]]
+name = "aurora-unified-daemon"
+path = "src/main.rs"
+
+[dependencies]
+aurora-core = { path = "../aurora-core" }
+aurora-kokoro-tts = { path = "../aurora-kokoro-tts" }
+aurora-discord = { path = "../aurora-discord" }
+aurora-esp32-gateway = { path = "../aurora-esp32-gateway" }
+burn.workspace = true
+tokio.workspace = true
+dashmap.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

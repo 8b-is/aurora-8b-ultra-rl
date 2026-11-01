@@ -1,0 +1,19 @@
+[package]
+name = "aurora-train-rl"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "5-Stage Pure-Rust Burn RL Training Pipeline (Projector -> SFT -> MOPD2 -> GRPO -> Quant) and MiMo-V2.6 5-Layer Multi-Token Prediction (MTP) Head"
+
+[[bin]]
+name = "aurora-train-rl"
+path = "src/main.rs"
+
+[dependencies]
+aurora-weights = { path = "../aurora-weights" }
+aurora-kokoro-tts = { path = "../aurora-kokoro-tts" }
+burn.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
