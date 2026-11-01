@@ -1,7 +1,9 @@
+pub mod dataset;
 pub mod grpo;
 pub mod mtp_head;
 pub mod pipeline;
 
+pub use dataset::{augment_esp32_mems_and_rir, write_pcm16_wav_24k};
 pub use grpo::{
     compute_group_relative_advantages, grpo_step_loss, DuplexRolloutRubric, GrpoHyperParams,
 };

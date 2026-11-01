@@ -1,0 +1,43 @@
+name: Aurora-8B-Ultra-RL Pure-Rust CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check-clippy-test:
+    name: Build, Clippy (-D warnings) & Workspace Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system Opus & audio headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libopus-dev libasound2-dev cmake
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry & target
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo check --workspace
+        run: cargo check --workspace
+
+      - name: Run cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run cargo test --workspace
+        run: cargo test --workspace
+
+      - name: Run 5-Stage E2E RL Training Pipeline Smoke Test
+        run: cargo run -p aurora-train-rl -- --stage all --steps 3 --out-dir ./checkpoints

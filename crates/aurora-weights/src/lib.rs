@@ -1,6 +1,11 @@
+pub mod hf_loader;
 pub mod kokoro_modules;
 pub mod lfm2_moe;
 
+pub use hf_loader::{
+    build_test_safetensors_blob, parse_safetensors_header, remap_pytorch_key_to_burn,
+    ParsedSafetensorsHeader, SafetensorTensorInfo, HF_SOURCE_REPOS,
+};
 pub use kokoro_modules::{WeightNormConv1d, KOKORO_82M_KEY_REMAP_RULES, LFM2_MOE_KEY_REMAP_RULES};
 pub use lfm2_moe::{
     DepthformerQ8Head, HfLfm2MoeJsonConfig, Lfm2MoeAttention, Lfm2MoeConfig, Lfm2MoeDecoderLayer,
@@ -84,5 +89,23 @@ mod tests {
             .try_to_vec::<f32>()
             .unwrap()[0];
         assert!(diff < 1e-5, "fused Conv1d must match WeightNormConv1d within 1e-5");
+    }
+
+    #[test]
+    fn test_safetensors_header_parser_and_pytorch_key_remapper() {
+        let blob = build_test_safetensors_blob(&[
+            ("model.layers.4.feed_forward.experts.7.w1.weight", &[4, 4], &[0.1f32; 16]),
+            ("decoder.generator.m_source.l_linear.weight", &[1, 9], &[0.2f32; 9]),
+        ]);
+        let parsed = parse_safetensors_header(&blob).expect("valid safetensors header");
+        assert_eq!(parsed.tensors.len(), 2);
+
+        let mapped_moe =
+            remap_pytorch_key_to_burn("model.layers.4.feed_forward.experts.7.w1.weight");
+        assert_eq!(mapped_moe, "layers.4.moe_mlp.experts.7.w1.weight");
+
+        let mapped_kokoro =
+            remap_pytorch_key_to_burn("decoder.generator.m_source.l_linear.weight");
+        assert_eq!(mapped_kokoro, "decoder.generator.m_source_l_linear.weight");
     }
 }

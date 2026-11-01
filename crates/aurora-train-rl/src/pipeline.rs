@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use tracing::info;
 
 use crate::{
+    dataset::{augment_esp32_mems_and_rir, write_pcm16_wav_24k},
     grpo::{
         compute_group_relative_advantages, grpo_step_loss, DuplexRolloutRubric, GrpoHyperParams,
     },
@@ -335,11 +336,24 @@ impl AuroraE2eTrainer {
         let static_header = b"A8B0_ESP32S3_MICRO_V1";
         fs::write(&esp32_bin_path, static_header)?;
 
+        // 4. Synthesize and export a 24 kHz Kokoro-82M verification WAV file
+        let x_ac = Tensor::<3>::full([1, 64, 4], 0.15, &self.device);
+        let style = Tensor::<2>::full([1, 32], 0.12, &self.device);
+        let f0 = Tensor::<3>::full([1, 1, 8], 210.0, &self.device);
+        let wav_tensor = self.kokoro_gen.forward(x_ac, style, f0);
+        let wav_samples = wav_tensor.into_data().try_to_vec::<f32>().unwrap_or_default();
+        let augmented_16k = augment_esp32_mems_and_rir(&wav_samples, &wav_samples, 0.12);
+        let wav_path = out_dir.join("aurora_kokoro_sample_24k.wav");
+        let wav_bytes = write_pcm16_wav_24k(&wav_path, &wav_samples)?;
+
         info!(
             manifest_path = %manifest_path.display(),
             esp32_bin_path = %esp32_bin_path.display(),
+            wav_path = %wav_path.display(),
+            wav_bytes,
+            augmented_samples = augmented_16k.len(),
             blake3 = %manifest.blake3_digest,
-            "Stage 5 [INT4/FP8 Server Burnpack + ESP32-S3 Micro-Encoder Export] completed"
+            "Stage 5 [INT4/FP8 Server Burnpack + ESP32-S3 Micro-Encoder + 24kHz WAV Export] completed"
         );
 
         Ok(StageTrainingReport {
