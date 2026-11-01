@@ -348,6 +348,8 @@ dependencies = [
  "aurora-kokoro-tts",
  "aurora-weights",
  "burn",
+ "serde",
+ "serde_json",
  "tracing",
  "tracing-subscriber",
 ]

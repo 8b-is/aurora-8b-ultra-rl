@@ -1,15 +1,18 @@
 pub mod grpo;
 pub mod mtp_head;
+pub mod pipeline;
 
 pub use grpo::{
     compute_group_relative_advantages, grpo_step_loss, DuplexRolloutRubric, GrpoHyperParams,
 };
 pub use mtp_head::{MtpDraftBlock, MtpSpeculativeHead};
+pub use pipeline::{AuroraE2eTrainer, StageTrainingReport};
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use aurora_kokoro_tts::KokoroStftBasis;
+    use aurora_weights::Lfm2MoeConfig;
     use burn::tensor::{Device, Tensor};
 
     #[test]
@@ -78,5 +81,25 @@ mod tests {
         );
         let loss_val = loss.into_data().try_to_vec::<f32>().unwrap()[0];
         assert!(loss_val.is_finite());
+    }
+
+    #[test]
+    fn test_e2e_5_stage_training_pipeline_decreases_loss() {
+        let device = Device::default();
+        let trainer = AuroraE2eTrainer::init(Lfm2MoeConfig::compact_test(), device);
+        let tmp_dir = std::env::temp_dir().join("aurora_8b_e2e_test_ckpt");
+        let reports = trainer
+            .run_pipeline("all", 3, &tmp_dir)
+            .expect("5-stage pipeline must succeed");
+        assert_eq!(reports.len(), 5);
+        for r in &reports[..4] {
+            assert!(
+                r.final_loss <= r.initial_loss,
+                "Stage {} loss must decrease ({} -> {})",
+                r.stage_name,
+                r.initial_loss,
+                r.final_loss
+            );
+        }
     }
 }
