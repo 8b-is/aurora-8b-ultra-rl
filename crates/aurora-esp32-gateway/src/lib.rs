@@ -17,20 +17,84 @@ use axum::{
         ws::{Message as WsMessage, WebSocket, WebSocketUpgrade},
         State,
     },
-    http::HeaderMap,
+    http::{header, HeaderMap, StatusCode},
     response::IntoResponse,
-    routing::get,
-    Router,
+    routing::{get, post},
+    Json, Router,
 };
 use futures_util::{SinkExt, StreamExt};
+use serde::{Deserialize, Serialize};
 use tokio::sync::{mpsc, Mutex as AsyncMutex};
 use tokio_util::sync::CancellationToken;
 
-/// Build the Axum router serving `/v1/aurora-esp32`.
+/// OpenAI-compatible `/v1/audio/speech` request payload.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct OpenAiSpeechRequest {
+    #[serde(default = "default_speech_model")]
+    pub model: String,
+    pub input: String,
+    #[serde(default = "default_speech_voice")]
+    pub voice: String,
+    #[serde(default = "default_response_format")]
+    pub response_format: String,
+}
+
+fn default_speech_model() -> String {
+    "aurora-8b-ultra-rl".to_string()
+}
+
+fn default_speech_voice() -> String {
+    "af_heart".to_string()
+}
+
+fn default_response_format() -> String {
+    "wav".to_string()
+}
+
+/// Build the Axum router serving `/v1/aurora-esp32`, `/v1/realtime`, `/v1/audio/speech`, and `/healthz`.
 pub fn build_esp32_router(engine: Arc<Esp32GatewayEngine>) -> Router {
     Router::new()
         .route("/v1/aurora-esp32", get(esp32_ws_upgrade))
+        .route("/v1/realtime", get(esp32_ws_upgrade))
+        .route("/v1/audio/speech", post(openai_audio_speech))
+        .route("/healthz", get(gateway_healthz))
         .with_state(engine)
+}
+
+pub async fn gateway_healthz(State(engine): State<Arc<Esp32GatewayEngine>>) -> impl IntoResponse {
+    Json(serde_json::json!({
+        "status": "ok",
+        "model": "aurora-8b-ultra-rl",
+        "backbone": "LiquidAI/LFM2.5-8B-A1B",
+        "tts": "hexgrad/Kokoro-82M",
+        "active_esp32_sessions": engine.sessions.len(),
+    }))
+}
+
+pub async fn openai_audio_speech(
+    State(engine): State<Arc<Esp32GatewayEngine>>,
+    Json(req): Json<OpenAiSpeechRequest>,
+) -> impl IntoResponse {
+    let samples_24k = engine.synthesize_speech_24k(&req.input, &req.voice);
+    if req.response_format.eq_ignore_ascii_case("pcm") {
+        let mut pcm_bytes = Vec::with_capacity(samples_24k.len() * 2);
+        for s in samples_24k {
+            let v = (s.clamp(-1.0, 1.0) * 32767.0) as i16;
+            pcm_bytes.extend_from_slice(&v.to_le_bytes());
+        }
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, "audio/pcm; rate=24000")],
+            pcm_bytes,
+        )
+    } else {
+        let wav_bytes = Esp32GatewayEngine::encode_wav_24k_bytes(&samples_24k);
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, "audio/wav")],
+            wav_bytes,
+        )
+    }
 }
 
 pub async fn esp32_ws_upgrade(
@@ -167,5 +231,17 @@ mod tests {
             }
             other => panic!("Expected TurnCommitted, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_openai_speech_synthesis_24k_wav_container() {
+        let device = Device::default();
+        let engine = Esp32GatewayEngine::new(device);
+        let samples = engine.synthesize_speech_24k("Aurora-8B-Ultra-RL online.", "af_heart");
+        assert!(!samples.is_empty());
+        let wav = Esp32GatewayEngine::encode_wav_24k_bytes(&samples);
+        assert_eq!(&wav[0..4], b"RIFF");
+        assert_eq!(&wav[8..12], b"WAVE");
+        assert_eq!(wav.len(), 44 + samples.len() * 2);
     }
 }

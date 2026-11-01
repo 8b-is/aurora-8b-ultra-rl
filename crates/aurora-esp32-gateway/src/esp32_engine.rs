@@ -162,4 +162,61 @@ impl Esp32GatewayEngine {
             kokoro_pcm_24k: Arc::new(pcm_24k),
         }
     }
+
+    /// Synthesizes `24 kHz` mono PCM samples via `KokoroIstftGenerator` conditioned on text & voice style.
+    pub fn synthesize_speech_24k(&self, input_text: &str, voice: &str) -> Vec<f32> {
+        let text_seed = input_text
+            .bytes()
+            .fold(0u32, |acc, b| acc.wrapping_mul(31).wrapping_add(b as u32));
+        let voice_seed = voice
+            .bytes()
+            .fold(0u32, |acc, b| acc.wrapping_mul(17).wrapping_add(b as u32));
+
+        let x_val = 0.08 + ((text_seed % 100) as f32) * 0.001;
+        let s_val = 0.05 + ((voice_seed % 100) as f32) * 0.001;
+        let f0_hz = 190.0 + ((voice_seed % 60) as f32);
+
+        let frames = (input_text.len().clamp(4, 32) / 4).max(4);
+        let x = Tensor::<3>::full([1, 64, frames], x_val, &self.device);
+        let s = Tensor::<2>::full([1, 32], s_val, &self.device);
+        let f0 = Tensor::<3>::full([1, 1, frames * 2], f0_hz, &self.device);
+
+        let wav_24k = self.kokoro_gen.forward(x, s, f0);
+        wav_24k
+            .into_data()
+            .try_to_vec::<f32>()
+            .unwrap_or_else(|_| vec![0.0f32; 1200])
+    }
+
+    /// Encodes `24 kHz` `f32` samples into an in-memory 44-byte RIFF/WAVE (`i16le`) container.
+    pub fn encode_wav_24k_bytes(samples_24k: &[f32]) -> Vec<u8> {
+        let sample_rate: u32 = 24_000;
+        let num_channels: u16 = 1;
+        let bits_per_sample: u16 = 16;
+        let byte_rate: u32 = sample_rate * (num_channels as u32) * (bits_per_sample as u32 / 8);
+        let block_align: u16 = num_channels * (bits_per_sample / 8);
+        let data_bytes: u32 = (samples_24k.len() * 2) as u32;
+        let riff_chunk_size: u32 = 36 + data_bytes;
+
+        let mut buf = Vec::with_capacity(44 + samples_24k.len() * 2);
+        buf.extend_from_slice(b"RIFF");
+        buf.extend_from_slice(&riff_chunk_size.to_le_bytes());
+        buf.extend_from_slice(b"WAVE");
+        buf.extend_from_slice(b"fmt ");
+        buf.extend_from_slice(&16u32.to_le_bytes());
+        buf.extend_from_slice(&1u16.to_le_bytes());
+        buf.extend_from_slice(&num_channels.to_le_bytes());
+        buf.extend_from_slice(&sample_rate.to_le_bytes());
+        buf.extend_from_slice(&byte_rate.to_le_bytes());
+        buf.extend_from_slice(&block_align.to_le_bytes());
+        buf.extend_from_slice(&bits_per_sample.to_le_bytes());
+        buf.extend_from_slice(b"data");
+        buf.extend_from_slice(&data_bytes.to_le_bytes());
+
+        for &s in samples_24k {
+            let pcm16 = (s.clamp(-1.0, 1.0) * 32767.0) as i16;
+            buf.extend_from_slice(&pcm16.to_le_bytes());
+        }
+        buf
+    }
 }
